@@ -41,7 +41,7 @@ export class PostController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postService.remove(id)
+  remove(@Param('id') id: string, @Request() req) {
+    return this.postService.remove(id, req.user.userId)
   }
 }
