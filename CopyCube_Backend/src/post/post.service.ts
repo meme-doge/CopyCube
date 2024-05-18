@@ -4,7 +4,7 @@ import {FilesService} from "../files/files.service";
 import * as crypto from "crypto";
 import * as buffer_lib from "buffer";
 import {ConfigService} from "@nestjs/config";
-import {Post} from "../post/entities/post.entity"
+import {Post} from "./entities/post.entity"
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {User} from "../user/entities/user.entity";
@@ -47,7 +47,10 @@ export class PostService {
     return await file.transformToString();
   }
   async patch(hash_id: string, updateData: UpdatePostDto, user_id:number ){
-    const post = await this.postsRepository.findOne({ where: { key: hash_id } });
+    const post = await this.postsRepository.findOne({
+      where: { key:hash_id },
+      relations: ['user'], // Указываем, что хотим загрузить связанные данные пользователя
+    });
     if (!post) {
       throw new Error('Post not found');
     }
@@ -68,7 +71,11 @@ export class PostService {
     return new HttpException("Changes applied successfully", HttpStatus.OK)
   }
   async remove(hash_id: string, user_id: number){
-    const post = await this.postsRepository.findOne({where:{key:hash_id}})
+    const post = await this.postsRepository.findOne({
+      where: { key:hash_id },
+      relations: ['user'], // Указываем, что хотим загрузить связанные данные пользователя
+    });
+
     if (!post){
       throw new Error('Post not found');
     }

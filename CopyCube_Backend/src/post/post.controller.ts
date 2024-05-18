@@ -40,8 +40,10 @@ export class PostController {
     return this.postService.patch(hash_id, updateData, req.user.userId)
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     return this.postService.remove(id, req.user.userId)
   }
 }
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFETUlOMzMyMjIzQHJpc2V1cC5jb20iLCJzdWIiOjU1LCJpYXQiOjE3MTYwMzQ5MjksImV4cCI6MTcxODYyNjkyOX0.e74Lyn7tcl7rq8iyxC6f_uUfheJ-Vl0ZKetPcV-z_5QeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFETUlOMzMyMjIzQHJpc2V1cC5jb20iLCJzdWIiOjU1LCJpYXQiOjE3MTYwMzQ5MjksImV4cCI6MTcxODYyNjkyOX0.e74Lyn7tcl7rq8iyxC6f_uUfheJ-Vl0ZKetPcV-z_5Q
