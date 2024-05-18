@@ -9,8 +9,8 @@ const argon2 = require('argon2');
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
-    private jwtService: JwtService,
+      @InjectRepository(User) private usersRepository: Repository<User>,
+      private jwtService: JwtService,
   ) {}
   async create(createUserDto: CreateUserDto) {
     const existUser = await this.usersRepository.findOne({
@@ -24,8 +24,10 @@ export class UserService {
       name: createUserDto.name,
       password: await argon2.hash(createUserDto.password)
     })
-
-    const token = this.jwtService.sign({name:createUserDto.name})
+    const token = this.jwtService.sign({
+      username:createUserDto.name,
+      sub:user.id
+    })
 
     delete user.password
     return {user, token}
