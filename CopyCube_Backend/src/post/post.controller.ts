@@ -29,8 +29,8 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string){
-    return this.postService.findOne(id)
+  async findOne(@Param('id') id: string, @Request() req){
+    return this.postService.findOne(id, req.user.userId)
   }
 
   @UseGuards(JwtAuthGuard)

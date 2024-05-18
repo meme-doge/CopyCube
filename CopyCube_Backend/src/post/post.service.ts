@@ -41,7 +41,21 @@ export class PostService {
 
     return {key: hash};
   }
-  async findOne(hash_id: string) {
+  async findOne(hash_id: string, user_id:number) {
+    const post = await this.postsRepository.findOne({
+      where: { key:hash_id },
+      relations: ['user'],
+    });
+
+    if (!post){
+      throw new BadRequestException('Post not found');
+    }
+    if (post.category === Category.Privat){
+      if (post.user.id !== user_id){
+        return new HttpException("Forbidden", HttpStatus.FORBIDDEN)
+      }
+    }
+
     const file = await this.filesService.downloadFile(hash_id, this.configService.get("BUCKET_POSTS"))
 
     return await file.transformToString();
@@ -51,6 +65,7 @@ export class PostService {
       where: { key:hash_id },
       relations: ['user'], // Указываем, что хотим загрузить связанные данные пользователя
     });
+
     if (!post) {
       throw new BadRequestException('Post not found');
     }
@@ -89,4 +104,6 @@ export class PostService {
 
     return new HttpException("Removal completely successful", HttpStatus.OK)
   }
+
+
 }
