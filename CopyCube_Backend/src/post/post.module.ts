@@ -6,7 +6,7 @@ import { FilesModule } from "../files/files.module";
 import { ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "../user/entities/user.entity";
-import { Post } from "../post/entities/post.entity"
+import { Post } from "./entities/post.entity"
 
 @Module({
   imports:[

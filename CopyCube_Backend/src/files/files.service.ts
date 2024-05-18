@@ -1,7 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import { CreateFileDto } from './dto/create-file.dto';
 import { ConfigService } from "@nestjs/config";
-import { S3Client, PutObjectCommand, GetObjectCommand} from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand
+} from '@aws-sdk/client-s3';
 @Injectable()
 export class FilesService {
   private readonly s3Client: S3Client;
@@ -34,7 +39,7 @@ export class FilesService {
       }
       throw error;
     }
-  }
+  }  //The function is also used to update a file in the bucket
   async downloadFile(key: string, bucket: string) {
     try {
       const command = new GetObjectCommand({
@@ -46,6 +51,21 @@ export class FilesService {
       return response.Body;
     } catch (error) {
       this.logger.error(`Failed to download file: ${error.message}`);
+      throw error;
+    }
+  }
+  async removeFile(key: string, bucket:string){
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      });
+      const response = await this.s3Client.send(command);
+
+      this.logger.log(`File delete successfully: ${key}`);
+      return response
+    } catch (error) {
+      this.logger.error(`Failed to delete file: ${error.message}`);
       throw error;
     }
   }

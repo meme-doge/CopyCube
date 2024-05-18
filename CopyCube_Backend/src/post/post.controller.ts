@@ -7,15 +7,15 @@ import {
   UseGuards,
   Request,
   UsePipes,
-  ValidationPipe
+  ValidationPipe, Patch, Delete
 } from '@nestjs/common';
 
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
-import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
-import {InjectRepository} from "@nestjs/typeorm";
-import {User} from "../user/entities/user.entity";
-import {Repository} from "typeorm";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { UpdatePostDto } from "./dto/update-post.dto";
+import { Post as PostEntity } from "./entities/post.entity"
+
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -29,7 +29,19 @@ export class PostController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Request() req, @Param('id') id: string){
+  async findOne(@Param('id') id: string){
     return this.postService.findOne(id)
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  @UsePipes(new ValidationPipe())
+  update(@Param('id') hash_id: string, @Body() updateData: Partial<PostEntity>, @Request() req) {
+    return this.postService.patch(hash_id, updateData, req.user.userId)
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.postService.remove(id)
   }
 }

@@ -1,4 +1,4 @@
-import {Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {CreatePostDto} from './dto/create-post.dto';
 import {FilesService} from "../files/files.service";
 import * as crypto from "crypto";
@@ -8,6 +8,8 @@ import {Post} from "../post/entities/post.entity"
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {User} from "../user/entities/user.entity";
+import {UpdatePostDto} from "./dto/update-post.dto";
+import {Category} from "./enum";
 
 @Injectable()
 export class PostService {
@@ -39,9 +41,37 @@ export class PostService {
 
     return {key: hash};
   }
-  async findOne(id: string) {
-    const file = await this.filesService.downloadFile(id, this.configService.get("BUCKET_POSTS"))
+  async findOne(hash_id: string) {
+    const file = await this.filesService.downloadFile(hash_id, this.configService.get("BUCKET_POSTS"))
 
     return await file.transformToString();
+  }
+  async patch(hash_id: string, updateData: UpdatePostDto, user_id:number ){
+    const post = await this.postsRepository.findOne({ where: { key: hash_id } });
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    const params = {
+        key:hash_id,
+        buffer:buffer_lib.Buffer.from(updateData.buffer),
+    }
+    await this.filesService.uploadFile(params, this.configService.get('BUCKET_POSTS'))
+
+    Object.assign(post, updateData);
+    post.updateDate = new Date();
+
+    await this.postsRepository.save(post);
+    return new HttpException("Changes applied successfully", HttpStatus.OK)
+  }
+  async remove(hash_id: string){
+    const post = await this.postsRepository.findOne({where:{key:hash_id}})
+    if (!post){
+      throw new Error('Post not found');
+    }
+    await this.filesService.removeFile(hash_id, this.configService.get('BUCKET_POSTS'))
+    await this.postsRepository.remove(post)
+
+    return new HttpException("Removal completely successful", HttpStatus.OK)
   }
 }
