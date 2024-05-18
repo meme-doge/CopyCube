@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {BadRequestException, HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {CreatePostDto} from './dto/create-post.dto';
 import {FilesService} from "../files/files.service";
 import * as crypto from "crypto";
@@ -52,10 +52,11 @@ export class PostService {
       relations: ['user'], // Указываем, что хотим загрузить связанные данные пользователя
     });
     if (!post) {
-      throw new Error('Post not found');
+      throw new BadRequestException('Post not found');
     }
     if (post.user.id !== user_id){
-      throw new Error('This post does not belong to you');
+      throw new BadRequestException('This post does not belong to you');
+
     }
 
     const params = {
@@ -77,10 +78,10 @@ export class PostService {
     });
 
     if (!post){
-      throw new Error('Post not found');
+      throw new BadRequestException('Post not found');
     }
     if (post.user.id !== user_id){
-      throw new Error('This post does not belong to you');
+      throw new BadRequestException('This post does not belong to you');
     }
 
     await this.filesService.removeFile(hash_id, this.configService.get('BUCKET_POSTS'))
