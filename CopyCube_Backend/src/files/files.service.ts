@@ -32,7 +32,8 @@ export class FilesService {
       const response = await this.s3Client.send(command);
       this.logger.log(`File uploaded successfully: ${JSON.stringify(response)}`);
       return response;
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error(`Failed to upload file: ${error.message}`);
       if (error.$metadata) {
         this.logger.error(`Error metadata: ${JSON.stringify(error.$metadata)}`);
@@ -42,6 +43,7 @@ export class FilesService {
   }  //The function is also used to update a file in the bucket
   async downloadFile(key: string, bucket: string) {
     try {
+      this.logger.debug(`Downloading file to bucket: ${bucket}, key: ${key}`);
       const command = new GetObjectCommand({
         Bucket: bucket,
         Key: key,
@@ -49,13 +51,16 @@ export class FilesService {
       const response = await this.s3Client.send(command);
       this.logger.log(`File downloaded successfully: ${key}`);
       return response.Body;
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error(`Failed to download file: ${error.message}`);
       throw error;
     }
   }
   async removeFile(key: string, bucket:string){
     try {
+      this.logger.debug(`Remove file to bucket: ${bucket}, key: ${key}`);
+
       const command = new DeleteObjectCommand({
         Bucket: bucket,
         Key: key,
@@ -64,7 +69,8 @@ export class FilesService {
 
       this.logger.log(`File delete successfully: ${key}`);
       return response
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error(`Failed to delete file: ${error.message}`);
       throw error;
     }
