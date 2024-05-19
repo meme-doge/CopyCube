@@ -18,6 +18,9 @@ export class User {
   @UpdateDateColumn()
   UpdateDate:Date
 
+  @Column({default: null})
+  avatar ?: string
+
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[]
 }

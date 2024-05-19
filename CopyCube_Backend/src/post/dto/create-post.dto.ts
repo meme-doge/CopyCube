@@ -1,12 +1,15 @@
 import {Category} from "../enum"
-import {IsBase64, IsEnum, IsNotEmpty, IsString} from "class-validator";
+import {IsBase64, IsEnum, IsNotEmpty, IsString, MinLength} from "class-validator";
 export class CreatePostDto {
     @IsString()
+    title?: string
+
+    @IsString()
+    @MinLength(1, {message:"Сontent cannot be empty"})
     @IsBase64()
-    buffer: string // the TITLE and the MAIN PART of the text will be stored in the buffer
+    buffer: string
 
     @IsEnum(Category)
     @IsNotEmpty()
-    category: Category // Private = 0
-                       // Public = 1
+    category: Category
 }

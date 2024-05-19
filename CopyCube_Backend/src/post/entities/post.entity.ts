@@ -15,13 +15,16 @@ export class Post {
     @PrimaryGeneratedColumn()
     id: number
 
+    @Column({ default: 'Untitled' })
+    title: string
+
     @Column()
     key:string
 
     @Column()
     category:Category
 
-    @ManyToOne(() => User, (user) => user.posts)
+    @ManyToOne(() => User, (user) => user.posts, {nullable: true})
     @JoinColumn({name:'user_id'})
     user: User
 

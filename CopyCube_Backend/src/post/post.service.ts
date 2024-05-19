@@ -23,9 +23,8 @@ export class PostService {
   async create(createPostDto: CreatePostDto, user_id:number) {
     const {buffer, category} = createPostDto
 
-    const fullHash = crypto.createHash('sha256').update(crypto.randomBytes(32) + buffer + Date.now() + user_id).digest("base64")
+    const fullHash = crypto.createHash('sha256').update(crypto.randomBytes(32) + buffer + Date.now()).digest("base64")
     const hash = fullHash.slice(0, 16).replace(/[+/=]/g, '');
-
     const params = {
       key:hash,
       buffer:buffer_lib.Buffer.from(buffer),
@@ -33,11 +32,21 @@ export class PostService {
 
     await this.filesService.uploadFile(params, this.configService.get('BUCKET_POSTS'))
 
-    const post = await this.postsRepository.save({
-      key:hash,
-      category: category,
-      user: await this.usersRepository.findOne({where:{id:user_id}})
-    })
+    if (user_id){
+      const post = await this.postsRepository.save({
+        title: createPostDto.title,
+        key:hash,
+        category: category,
+        user: await this.usersRepository.findOne({where:{id:user_id}})
+      })
+    }
+    else {
+      const post = await this.postsRepository.save({
+        key:hash,
+        title: createPostDto.title,
+        category: category,
+      })
+    }
 
     return {key: hash};
   }
@@ -51,14 +60,22 @@ export class PostService {
       throw new BadRequestException('Post not found');
     }
     if (post.category === Category.Privat){
-      if (post.user.id !== user_id){
-        return new HttpException("Forbidden", HttpStatus.FORBIDDEN)
+      if (post.user){
+        if (post.user.id !== user_id){
+          return new HttpException("Forbidden", HttpStatus.FORBIDDEN)
+        }
+        delete post.user.password
+        delete post.user.UpdateDate
       }
     }
 
     const file = await this.filesService.downloadFile(hash_id, this.configService.get("BUCKET_POSTS"))
 
-    return await file.transformToString();
+    delete post.id
+    return {
+      file: await file.transformToString(),
+      post: post
+    };
   }
   async patch(hash_id: string, updateData: UpdatePostDto, user_id:number ){
     const post = await this.postsRepository.findOne({
@@ -106,4 +123,19 @@ export class PostService {
   }
 
 
+  async getPublicPosts(page: number, limit: number){
+    return await this.postsRepository.find({
+      where:{category:Category.Public},
+      skip: (page - 1) * limit,
+      take: limit,
+    })
+  }
+  async getUserPosts(user_id:number, page: number, limit: number){
+    return await this.postsRepository.find({
+      where:{user:{id:user_id}},
+      skip: (page - 1) * limit,
+      take: limit,
+    })
+
+  }
 }
