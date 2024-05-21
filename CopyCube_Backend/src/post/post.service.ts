@@ -21,6 +21,9 @@ export class PostService {
   ) {}
 
   async create(createPostDto: CreatePostDto, user_id:number) {
+    if (!user_id && createPostDto.category === Category.Privat) {
+      throw new BadRequestException("the category of private posts for anonymous users is prohibited")
+    }
     const {buffer, category} = createPostDto
 
     const fullHash = crypto.createHash('sha256').update(crypto.randomBytes(32) + buffer + Date.now()).digest("base64")
@@ -61,17 +64,23 @@ export class PostService {
     }
     if (post.category === Category.Privat){
       if (post.user){
-        if (post.user.id !== user_id){
+        if (post.user.id != user_id){
           return new HttpException("Forbidden", HttpStatus.FORBIDDEN)
         }
-        delete post.user.password
-        delete post.user.UpdateDate
+      } else {
+        return new HttpException("Forbidden", HttpStatus.FORBIDDEN)
       }
     }
 
     const file = await this.filesService.downloadFile(hash_id, this.configService.get("BUCKET_POSTS"))
 
+    if (post.user){
+      delete post.user.password
+      delete post.user.UpdateDate
+      delete post.user.id
+    }
     delete post.id
+
     return {
       file: await file.transformToString(),
       post: post
@@ -86,9 +95,12 @@ export class PostService {
     if (!post) {
       throw new BadRequestException('Post not found');
     }
-    if (post.user.id !== user_id){
+    if (post.user){
+      if(post.user.id !== user_id){
+        throw new BadRequestException('This post does not belong to you');
+      }
+    } else{
       throw new BadRequestException('This post does not belong to you');
-
     }
 
     const params = {
@@ -109,10 +121,15 @@ export class PostService {
       relations: ['user'], // Указываем, что хотим загрузить связанные данные пользователя
     });
 
-    if (!post){
+    if (!post) {
       throw new BadRequestException('Post not found');
     }
-    if (post.user.id !== user_id){
+    if (post.user){
+      if(post.user.id !== user_id){
+        throw new BadRequestException('This post does not belong to you');
+      }
+    }
+    else{
       throw new BadRequestException('This post does not belong to you');
     }
 
@@ -126,6 +143,7 @@ export class PostService {
   async getPublicPosts(page: number, limit: number){
     return await this.postsRepository.find({
       where:{category:Category.Public},
+
       skip: (page - 1) * limit,
       take: limit,
     })

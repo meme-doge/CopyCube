@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { FilesModule } from './files/files.module';
 import {PostModule} from "./post/post.module";
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import {PostModule} from "./post/post.module";
     AuthModule,
     FilesModule,
     PostModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
